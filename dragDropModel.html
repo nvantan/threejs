@@ -26,11 +26,70 @@
         background-position: center;
         background-size: cover;
       }
+
+      #root {
+        display: flex;
+      }
+
+      #root .area-texture {
+        flex: 1;
+        color: #333;
+        /* text-align: center; */
+        padding-left: 10px;
+      }
+
+      .area-texture__box div {
+        width: 100px;
+        /* height: 100px; */
+      }
+
+      .area-texture__box div img {
+        object-position: center;
+        object-fit: cover;
+        width: 100%;
+      }
     </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="area-render"></div>
+      <div class="area-texture">
+        <h3>Texture floor</h3>
+        <div class="area-texture__box">
+          <div
+            class="area-texture__box-item"
+            data-texture="/src/image/aditya-joshi-wG923J9naFQ-unsplash.jpg"
+          >
+            <img src="/src/image/aditya-joshi-wG923J9naFQ-unsplash.jpg" />
+          </div>
+          <div
+            class="area-texture__box-item"
+            data-texture="/src/image/dulcey-lima-FhcJZTGO79s-unsplash.jpg"
+          >
+            <img src="/src/image/dulcey-lima-FhcJZTGO79s-unsplash.jpg" />
+          </div>
+          <div
+            class="area-texture__box-item"
+            data-texture="/src/image/jean-charles-amey-Cd4-VNvBteI-unsplash.jpg"
+          >
+            <img src="/src/image/jean-charles-amey-Cd4-VNvBteI-unsplash.jpg" />
+          </div>
+          <div
+            class="area-texture__box-item"
+            data-texture="/src/image/keith-misner-h0Vxgz5tyXA-unsplash.jpg"
+          >
+            <img src="/src/image/keith-misner-h0Vxgz5tyXA-unsplash.jpg" />
+          </div>
+          <div
+            class="area-texture__box-item"
+            data-texture="/src/image/simon-berger-JH_R66BihvA-unsplash.jpg"
+          >
+            <img src="/src/image/simon-berger-JH_R66BihvA-unsplash.jpg" />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- <div id="abc"></div> -->
     <div class="box-obj">
@@ -99,7 +158,7 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(1000, 600);
       renderer.shadowMap.enabled = true;
-      document.getElementById("root").appendChild(renderer.domElement);
+      document.getElementById("area-render").appendChild(renderer.domElement);
 
       // WINDOW RESIZE HANDLING
       export function onWindowResize() {
@@ -138,18 +197,34 @@
       dirLight.shadow.camera.top = 70;
       dirLight.shadow.camera.bottom = -70;
 
-      function createFloor() {
+      let blockPlaneName = "";
+
+      function createFloor(texturePath) {
         let pos = { x: 0, y: -1, z: 3 };
         let scale = { x: 100, y: 2, z: 100 };
 
+        if (blockPlaneName === texturePath) {
+          return;
+        }
+
+        if (blockPlaneName && blockPlaneName !== texturePath) {
+          const selectedObject = scene.getObjectByName(blockPlaneName);
+          scene.remove(selectedObject);
+        }
+
+        const textureLoader = new THREE.TextureLoader();
+
+        const texture1 = textureLoader.load(texturePath);
         let blockPlane = new THREE.Mesh(
           new THREE.BoxBufferGeometry(),
-          new THREE.MeshPhongMaterial({ color: 0x120796 })
+          new THREE.MeshPhongMaterial({ color: 0xffffff, map: texture1 })
         );
         blockPlane.position.set(pos.x, pos.y, pos.z);
         blockPlane.scale.set(scale.x, scale.y, scale.z);
         blockPlane.castShadow = true;
         blockPlane.receiveShadow = true;
+        blockPlane.name = texturePath;
+        blockPlaneName = texturePath;
         scene.add(blockPlane);
 
         blockPlane.userData.ground = true;
@@ -266,7 +341,7 @@
         }
       }
 
-      createFloor();
+      createFloor("src/image/dulcey-lima-FhcJZTGO79s-unsplash.jpg");
       // createCastle();
       // createTable();
 
@@ -275,12 +350,21 @@
       const boxModelItem = document.getElementsByClassName("box-model-item");
       Array.from(boxModelItem).forEach(function (element) {
         element.addEventListener("click", () => {
-          console.log(element.dataset.name);
           loaderModel(
             element.dataset.model,
             element.dataset.name,
             element.dataset.scale
           );
+        });
+      });
+
+      const boxTextureItem = document.getElementsByClassName(
+        "area-texture__box-item"
+      );
+      Array.from(boxTextureItem).forEach(function (element) {
+        element.addEventListener("click", () => {
+          // texturePath = element.dataset.texture;
+          createFloor(element.dataset.texture);
         });
       });
     </script>
