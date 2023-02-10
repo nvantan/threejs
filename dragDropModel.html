@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>three.js webgl - IFCLoader</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <link type="text/css" rel="stylesheet" href="src/css/main.css" />
+    <style>
+      #abc {
+        width: 1000px;
+        height: 600px;
+        margin: 0 auto;
+      }
+
+      .box-obj {
+        display: flex;
+        justify-content: unset;
+      }
+
+      .box-obj div {
+        width: 180px;
+        height: 180px;
+        background-position: center;
+        background-size: cover;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- <div id="abc"></div> -->
+    <div class="box-obj">
+      <div
+        style="background-image: url('src/image/s83110-chair-16205.jpg')"
+        class="box-model-item"
+        data-model="src/models/obj/Chair.obj"
+        data-scale="0.4"
+        data-name="CHAIR"
+      ></div>
+      <div
+        style="background-image: url('src/image/1322-chair.jpg')"
+        class="box-model-item"
+        data-model="src/models/obj/chair_01.obj"
+        data-scale="15"
+        data-name="CHAIR_01"
+      ></div>
+      <div
+        style="
+          background-image: url('src/image/s92748-cinema4d-table-66762.jpg');
+        "
+        class="box-model-item"
+        data-model="src/models/obj/Wood_Table11.obj"
+        data-scale="15"
+        data-name="WOOD_TABLE"
+      ></div>
+      <div
+        style="
+          background-image: url('src/image/l52821-working-table-22544.png');
+        "
+        class="box-model-item"
+        data-model="src/models/obj/Table121.obj"
+        data-scale="1.5"
+        data-name="TABLE_1"
+      ></div>
+    </div>
+
+    <!-- Import maps polyfill -->
+    <!-- Remove this when import maps will be widely supported -->
+    <script
+      async
+      src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+    ></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.149.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.149.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+
+      // CAMERA
+      const camera = new THREE.PerspectiveCamera(30, 1000 / 600, 1, 1500);
+      camera.position.set(35, 70, -150);
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+      // RENDERER
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(1000, 600);
+      renderer.shadowMap.enabled = true;
+      document.getElementById("root").appendChild(renderer.domElement);
+
+      // WINDOW RESIZE HANDLING
+      export function onWindowResize() {
+        camera.aspect = 1000 / 600;
+        camera.updateProjectionMatrix();
+        renderer.setSize(1000, 600);
+      }
+      window.addEventListener("resize", onWindowResize);
+
+      // SCENE
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xbfd1e5);
+
+      // CONTROLS
+      const controls = new OrbitControls(camera, renderer.domElement);
+
+      export function animate() {
+        dragObject();
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      // ambient light
+      let hemiLight = new THREE.AmbientLight(0xffffff, 0.2);
+      scene.add(hemiLight);
+
+      //Add directional light
+      let dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(-30, 50, -30);
+      scene.add(dirLight);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.camera.left = -70;
+      dirLight.shadow.camera.right = 70;
+      dirLight.shadow.camera.top = 70;
+      dirLight.shadow.camera.bottom = -70;
+
+      function createFloor() {
+        let pos = { x: 0, y: -1, z: 3 };
+        let scale = { x: 100, y: 2, z: 100 };
+
+        let blockPlane = new THREE.Mesh(
+          new THREE.BoxBufferGeometry(),
+          new THREE.MeshPhongMaterial({ color: 0x120796 })
+        );
+        blockPlane.position.set(pos.x, pos.y, pos.z);
+        blockPlane.scale.set(scale.x, scale.y, scale.z);
+        blockPlane.castShadow = true;
+        blockPlane.receiveShadow = true;
+        scene.add(blockPlane);
+
+        blockPlane.userData.ground = true;
+
+        // let blockPlane1 = new THREE.Mesh(
+        //   new THREE.BoxBufferGeometry(),
+        //   new THREE.MeshPhongMaterial({ color: 0x120796 })
+        // );
+        // blockPlane1.position.set(0, 48, 52);
+        // blockPlane1.rotation.x = Math.PI / 2;
+        // blockPlane1.scale.set(scale.x, scale.y, scale.z);
+        // blockPlane1.castShadow = true;
+        // blockPlane1.receiveShadow = true;
+        // scene.add(blockPlane1);
+
+        // let blockPlane2 = new THREE.Mesh(
+        //   new THREE.BoxBufferGeometry(),
+        //   new THREE.MeshPhongMaterial({ color: 0x120796 })
+        // );
+        // blockPlane2.position.set(49, 48, 3);
+        // blockPlane2.rotation.z = Math.PI / 2;
+        // blockPlane2.scale.set(scale.x, scale.y, scale.z);
+        // blockPlane2.castShadow = true;
+        // blockPlane2.receiveShadow = true;
+        // scene.add(blockPlane2);
+
+        var gridXY = new THREE.GridHelper(100, 15);
+        gridXY.position.set(0, 50, 53);
+        gridXY.rotation.x = Math.PI / 2;
+        // gridXY.setColors(new THREE.Color(0x000066), new THREE.Color(0x000066));
+        scene.add(gridXY);
+
+        // var gridYZ = new THREE.GridHelper(100, 15);
+        // gridYZ.position.set(50, 50, 3);
+        // gridYZ.rotation.z = Math.PI / 2;
+        // // gridYZ.setColors(new THREE.Color(0x660000), new THREE.Color(0x660000));
+        // scene.add(gridYZ);
+
+        var gridZY = new THREE.GridHelper(100, 15);
+        gridZY.position.set(-50, 50, 3);
+        gridZY.rotation.z = Math.PI / 2;
+        // gridZY.setColors(new THREE.Color(0x660000), new THREE.Color(0x660000));
+        scene.add(gridZY);
+      }
+
+      function loaderModel(model, modelName, scale) {
+        const objLoader = new OBJLoader();
+
+        objLoader.load(model, (group) => {
+          const castle = group.children[0];
+
+          castle.position.x = -15;
+          castle.position.z = -15;
+
+          castle.scale.set(scale, scale, scale);
+
+          castle.castShadow = true;
+          castle.receiveShadow = true;
+
+          castle.userData.draggable = true;
+          castle.userData.name = modelName;
+
+          scene.add(castle);
+        });
+      }
+
+      const raycaster = new THREE.Raycaster(); // create once
+      const clickMouse = new THREE.Vector2(); // create once
+      const moveMouse = new THREE.Vector2(); // create once
+      var draggable;
+
+      function intersect(pos) {
+        raycaster.setFromCamera(pos, camera);
+        return raycaster.intersectObjects(scene.children);
+      }
+
+      window.addEventListener("click", (event) => {
+        if (draggable != null) {
+          console.log(`dropping draggable ${draggable.userData.name}`);
+          draggable = null;
+          return;
+        }
+
+        // THREE RAYCASTER
+        clickMouse.x = (event.clientX / 1000) * 2 - 1;
+        clickMouse.y = -(event.clientY / 600) * 2 + 1;
+
+        const found = intersect(clickMouse);
+        if (found.length > 0) {
+          if (found[0].object.userData.draggable) {
+            draggable = found[0].object;
+            console.log(`found draggable ${draggable.userData.name}`);
+          }
+        }
+      });
+
+      window.addEventListener("mousemove", (event) => {
+        moveMouse.x = (event.clientX / 1000) * 2 - 1;
+        moveMouse.y = -(event.clientY / 600) * 2 + 1;
+      });
+
+      function dragObject() {
+        if (draggable != null) {
+          const found = intersect(moveMouse);
+          if (found.length > 0) {
+            for (let i = 0; i < found.length; i++) {
+              if (!found[i].object.userData.ground) continue;
+
+              let target = found[i].point;
+              draggable.position.x = target.x;
+              draggable.position.z = target.z;
+            }
+          }
+        }
+      }
+
+      createFloor();
+      // createCastle();
+      // createTable();
+
+      animate();
+
+      const boxModelItem = document.getElementsByClassName("box-model-item");
+      Array.from(boxModelItem).forEach(function (element) {
+        element.addEventListener("click", () => {
+          console.log(element.dataset.name);
+          loaderModel(
+            element.dataset.model,
+            element.dataset.name,
+            element.dataset.scale
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
